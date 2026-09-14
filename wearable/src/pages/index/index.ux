@@ -1,0 +1,262 @@
+<template>
+  <div class="page">
+    <div class="header">
+      <div class="status-dot" style="background-color: {{ statusColor }};"></div>
+      <text class="status">{{ header }}</text>
+    </div>
+    <div class="navigation" show="{{ guidance }}">
+      <div class="maneuver">
+        <image class="arrow" src="{{ icon }}"></image>
+        <div class="metric">
+          <text class="distance" style="font-size: {{ distanceSize }}px;">{{ distanceValue }}</text>
+          <text class="unit">{{ distanceUnit }}</text>
+        </div>
+      </div>
+      <div class="instruction-card">
+        <div class="instruction-mark"></div>
+        <text class="instruction">{{ instruction }}</text>
+      </div>
+    </div>
+    <div class="rest" show="{{ !guidance }}">
+      <div class="rest-symbol">
+        <div class="phone-symbol">
+          <div class="phone-speaker"></div>
+          <div class="phone-home"></div>
+        </div>
+        <div class="transfer">
+          <div class="transfer-dot"></div>
+          <div class="transfer-dot"></div>
+          <div class="transfer-dot"></div>
+        </div>
+        <div class="band-symbol">
+          <div class="band-strap"></div>
+          <div class="band-face"></div>
+          <div class="band-strap"></div>
+        </div>
+      </div>
+      <text class="rest-title">{{ status }}</text>
+      <text class="rest-hint">{{ hint }}</text>
+    </div>
+    <list class="details">
+      <list-item for="{{ rawLines }}" type="detail" class="detail-row">
+        <text class="raw">{{ $item }}</text>
+      </list-item>
+    </list>
+  </div>
+</template>
+
+<script>
+const protocol = require('../../common/protocol')
+const presentation = require('../../common/presentation')
+let connection = null
+let latest = null
+let receivedAt = 0
+let connected = false
+let timer = null
+let connectionError = ''
+let alive = false
+let visible = false
+let screenRequested = false
+let screenRevision = 0
+let screenError = ''
+
+export default {
+  private: {
+    status: '等待导航',
+    icon: '/common/unknown.png',
+    distance: '',
+    instruction: '',
+    rawLines: [' '],
+    header: '腕上导航',
+    guidance: false,
+    statusColor: '#64776b',
+    distanceValue: '',
+    distanceUnit: '',
+    distanceSize: 72,
+    hint: '在手机上连接小米运动健康'
+  },
+  onInit() {
+    latest = null
+    receivedAt = 0
+    connected = false
+    connectionError = ''
+    visible = false
+    screenRequested = false
+    screenError = ''
+    alive = true
+    this.paint()
+  },
+  // Establish interconnect only after the first screen has been created.
+  onReady() { this.retry() },
+  onShow() {
+    visible = true
+    this.paint()
+    if (connection) this.retry()
+  },
+  onHide() {
+    visible = false
+    if (timer) clearTimeout(timer)
+    timer = null
+    this.keepScreenOn(false)
+  },
+  onDestroy() {
+    alive = false
+    visible = false
+    // Release again if the previous off request failed or is still pending.
+    this.keepScreenOn(false, true)
+    if (timer) clearTimeout(timer)
+    timer = null
+    if (connection) {
+      try {
+        connection.onmessage = () => {}
+        connection.onopen = () => {}
+        connection.onclose = () => {}
+        connection.onerror = () => {}
+      } catch (error) { /* Some firmware rejects callback changes after disconnect. */ }
+    }
+    connection = null
+    latest = null
+  },
+  ready() {
+    this.send({ v: 1, type: 'ready' })
+  },
+  send(message) {
+    if (!connection || !alive) return
+    try {
+      connection.send({
+        data: JSON.stringify(message),
+        fail: (data, code) => this.failed('发送失败', data, code)
+      })
+    } catch (error) { this.failed('发送失败', error) }
+  },
+  failed(stage, data, code) {
+    if (!alive) return
+    connected = false
+    connectionError = presentation.errorText(stage, data, code)
+    this.paint()
+  },
+  retry() {
+    if (!alive) return
+    connectionError = ''
+    try {
+      if (!connection) {
+        // Lazy loading keeps missing/failed firmware APIs from aborting page creation.
+        const interconnect = require('@system.interconnect')
+        connection = interconnect.instance()
+        connection.onopen = () => {
+          if (!alive) return
+          connected = true
+          connectionError = ''
+          this.ready()
+          this.paint()
+        }
+        connection.onclose = data => this.failed('连接断开', data)
+        connection.onerror = data => this.failed('连接异常', data)
+        connection.onmessage = event => {
+          if (!alive) return
+          const packet = protocol.decode(event && event.data)
+          if (!protocol.accept(latest, packet)) return
+          latest = packet
+          receivedAt = Date.now()
+          connected = true
+          connectionError = ''
+          if (visible) this.paint()
+          this.send({ v: 1, type: 'ack', session: packet.session, seq: packet.seq })
+        }
+      }
+      connection.getReadyState({
+        success: data => {
+          if (!alive) return
+          connected = !!data && data.status === 1
+          connectionError = ''
+          if (connected) this.ready()
+          this.paint()
+        },
+        fail: (data, code) => this.failed('连接检查失败', data, code)
+      })
+    } catch (error) {
+      connection = null
+      this.failed('互联初始化失败', error)
+    }
+    this.paint()
+  },
+  scheduleExpiry() {
+    if (timer) clearTimeout(timer)
+    timer = null
+    if (!alive || !visible || !connected || !latest) return
+    if (latest.status !== 'active' && latest.status !== 'demo') return
+    const remaining = protocol.EXPIRY_MS - (Date.now() - receivedAt)
+    if (remaining > 0) timer = setTimeout(() => { timer = null; this.paint() }, remaining)
+  },
+  keepScreenOn(value, force) {
+    if (!force && screenRequested === value) return
+    screenRequested = value
+    screenError = ''
+    const revision = ++screenRevision
+    const fail = (data, code) => {
+      if (!alive || revision !== screenRevision) return
+      screenError = presentation.errorText(value ? '常亮开启失败' : '常亮关闭失败', data, code)
+      this.paint()
+    }
+    try {
+      // Load lazily: a missing brightness API must not stop navigation rendering.
+      const brightness = require('@system.brightness')
+      brightness.setKeepScreenOn({ keepScreenOn: value, fail })
+    } catch (error) { fail(error) }
+  },
+  paint() {
+    const now = Date.now()
+    const age = now - receivedAt
+    let view = protocol.present(latest, age, connected)
+    this.keepScreenOn(visible && !!view.live && latest.keepScreenOn !== false)
+    if (connectionError) {
+      view.status = '连接不可用'
+      view.rawText = connectionError
+    }
+    this.scheduleExpiry()
+    if (this.status !== view.status) this.status = view.status
+    const icon = '/common/' + view.icon + '.png'
+    if (this.icon !== icon) this.icon = icon
+    if (this.distance !== view.distance) this.distance = view.distance
+    if (this.instruction !== view.instruction) this.instruction = view.instruction
+    const layout = presentation.layout(view)
+    for (const field of ['header', 'guidance', 'statusColor', 'distanceValue', 'distanceUnit', 'distanceSize', 'hint']) {
+      if (this[field] !== layout[field]) this[field] = layout[field]
+    }
+    const lines = presentation.lines(layout.details + (screenError ? '\n' + screenError : ''))
+    // Unchanged heartbeats renew expiry without rebuilding native views.
+    if (lines.join('\n') !== this.rawLines.join('\n')) this.rawLines = lines
+  }
+}
+</script>
+
+<style>
+.page { width: 336px; height: 480px; background-color: #000000; flex-direction: column; align-items: center; }
+.header { width: 280px; height: 28px; margin-top: 28px; flex-direction: row; align-items: center; }
+.status-dot { width: 6px; height: 6px; border-width: 1px; border-color: #000000; border-radius: 3px; margin-right: 10px; }
+.status { width: 264px; height: 28px; color: #9aafa0; font-size: 18px; line-height: 28px; }
+.navigation { width: 288px; height: 270px; margin-top: 24px; flex-direction: column; }
+.maneuver { width: 288px; height: 146px; flex-direction: row; align-items: center; }
+.arrow { width: 112px; height: 132px; object-fit: contain; }
+.metric { width: 164px; height: 130px; margin-left: 12px; flex-direction: column; justify-content: center; }
+.distance { width: 164px; height: 88px; color: #f4f8f1; font-size: 72px; line-height: 88px; font-weight: bold; lines: 1; }
+.unit { width: 164px; height: 30px; color: #9aafa0; font-size: 22px; line-height: 30px; }
+.instruction-card { width: 288px; height: 104px; margin-top: 20px; background-color: #142119; border-width: 1px; border-color: #23362a; border-radius: 22px; flex-direction: row; align-items: center; }
+.instruction-mark { width: 4px; height: 30px; margin-left: 18px; background-color: #80f5be; border-width: 1px; border-color: #80f5be; border-radius: 2px; }
+.instruction { width: 230px; height: 72px; margin-left: 14px; color: #f4f8f1; font-size: 28px; line-height: 36px; font-weight: bold; lines: 2; text-overflow: ellipsis; }
+.rest { width: 288px; height: 270px; margin-top: 24px; flex-direction: column; align-items: center; }
+.rest-symbol { width: 154px; height: 120px; margin-top: 12px; background-color: #101c15; border-width: 1px; border-color: #23362a; border-radius: 32px; flex-direction: row; align-items: center; justify-content: center; }
+.phone-symbol { width: 32px; height: 60px; border-width: 2px; border-color: #80f5be; border-radius: 8px; flex-direction: column; align-items: center; justify-content: space-between; }
+.phone-speaker { width: 10px; height: 2px; margin-top: 6px; background-color: #80f5be; }
+.phone-home { width: 8px; height: 2px; margin-bottom: 6px; background-color: #80f5be; }
+.transfer { width: 40px; height: 8px; flex-direction: row; align-items: center; justify-content: center; }
+.transfer-dot { width: 3px; height: 3px; margin-left: 3px; margin-right: 3px; background-color: #526f5d; }
+.band-symbol { width: 30px; height: 68px; flex-direction: column; align-items: center; }
+.band-strap { width: 14px; height: 12px; background-color: #2b4937; border-width: 1px; border-color: #2b4937; border-radius: 3px; }
+.band-face { width: 30px; height: 44px; border-width: 2px; border-color: #80f5be; border-radius: 9px; }
+.rest-title { width: 288px; height: 42px; margin-top: 26px; color: #f4f8f1; font-size: 30px; line-height: 42px; text-align: center; font-weight: bold; }
+.rest-hint { width: 248px; height: 56px; margin-top: 12px; color: #9aafa0; font-size: 19px; line-height: 28px; lines: 2; text-align: center; }
+.details { width: 288px; height: 84px; margin-top: 16px; }
+.detail-row { width: 288px; height: 28px; }
+.raw { width: 288px; height: 28px; color: #9aafa0; font-size: 20px; line-height: 28px; }
+</style>

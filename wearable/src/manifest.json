@@ -1,0 +1,34 @@
+{
+  "package": "io.github.mi9pro.navigation",
+  "name": "腕上导航",
+  "icon": "/common/icon.png",
+  "versionName": "0.2.1",
+  "versionCode": 6,
+  "minAPILevel": 1,
+  "deviceTypeList": [
+    "watch"
+  ],
+  "features": [
+    {
+      "name": "system.interconnect"
+    },
+    {
+      "name": "system.brightness"
+    }
+  ],
+  "config": {
+    "designWidth": 336,
+    "logLevel": "error"
+  },
+  "display": {
+    "backgroundColor": "#000000"
+  },
+  "router": {
+    "entry": "pages/index",
+    "pages": {
+      "pages/index": {
+        "component": "index"
+      }
+    }
+  }
+}

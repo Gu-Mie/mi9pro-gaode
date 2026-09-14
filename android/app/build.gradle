@@ -1,0 +1,37 @@
+plugins { id 'com.android.application' }
+
+android {
+    namespace 'io.github.mi9pro.navigation'
+    compileSdk 35
+    defaultConfig {
+        applicationId 'io.github.mi9pro.navigation'
+        minSdk 26
+        targetSdk 35
+        versionCode 6
+        versionName '0.2.1'
+    }
+    buildFeatures { buildConfig true }
+    signingConfigs {
+        sharedDebug {
+            storeFile rootProject.file('../signing/development.p12')
+            storePassword 'android'
+            keyAlias 'wrist-navigation'
+            keyPassword 'android'
+            storeType 'PKCS12'
+        }
+    }
+    buildTypes {
+        debug { signingConfig signingConfigs.sharedDebug }
+        release { minifyEnabled false }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation files('libs/xms-wearable-lib_1.4_release.aar')
+    implementation 'androidx.annotation:annotation:1.8.2'
+    testImplementation 'junit:junit:4.13.2'
+}

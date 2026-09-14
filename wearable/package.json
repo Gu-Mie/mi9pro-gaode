@@ -1,0 +1,17 @@
+{
+  "name": "wrist-navigation",
+  "version": "0.2.1",
+  "private": true,
+  "scripts": {
+    "build": "aiot build",
+    "release": "aiot release",
+    "start": "aiot server --watch",
+    "test": "node --test test/*.test.js"
+  },
+  "devDependencies": {
+    "aiot-toolkit": "2.0.5"
+  },
+  "browserslist": [
+    "chrome 65"
+  ]
+}
