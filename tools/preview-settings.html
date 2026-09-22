@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>腕上导航 · 自定义显示设置</title>
+<style>
+@font-face{font-family:BandSong;src:local("SimSun"),local("Songti SC")}
+@font-face{font-family:BandKai;src:local("KaiTi"),local("Kaiti SC")}
+@font-face{font-family:BandRounded;src:local("YouYuan"),local("Yuanti SC")}
+*{box-sizing:border-box}body{margin:0;background:#eff2eb;color:#273b30;font-family:"Microsoft YaHei",system-ui,sans-serif;padding:36px 24px}
+button,input{font:inherit}button{cursor:pointer}button:disabled{cursor:default;opacity:.35}button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #86d6ad;outline-offset:3px}a{color:#315d42}button svg{pointer-events:none}
+.shell{max-width:1080px;margin:auto}.eyebrow{font-size:12px;letter-spacing:2px;color:#657c6b}h1{font-size:30px;line-height:1.5;margin:10px 0}header p{margin:0;color:#65786a;line-height:1.8;font-size:14px}
+.workspace{display:grid;grid-template-columns:minmax(360px,1fr) minmax(0,1fr);align-items:center;gap:60px;margin-top:28px}.stage{display:flex;flex-direction:column;align-items:center;min-width:0}
+.strap{height:35px;width:184px;background:linear-gradient(90deg,#202322,#353936 45%,#202322);border-radius:24px 24px 0 0}.strap.bottom{border-radius:0 0 24px 24px}
+.device{padding:8px;background:linear-gradient(135deg,#767d78,#242a27 24%,#505651 70%,#1c221e);border:1px solid #626a63;border-radius:51px;box-shadow:0 16px 40px #24362a25}
+.screen{--instruction-size:34px;--arrow-size:78px;--nav-font:"Microsoft YaHei",system-ui,sans-serif;width:336px;height:480px;background:#000;border-radius:43px;overflow:hidden;color:#fff;position:relative}
+[hidden]{display:none!important}.navigation{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 22px;gap:20px}
+.nav-arrow{width:var(--arrow-size);height:var(--arrow-size);flex-shrink:0;overflow:visible}.nav-arrow path{stroke:#fff;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.instruction{margin:0;width:100%;max-height:166px;overflow-y:auto;white-space:pre-wrap;overflow-wrap:anywhere;text-align:center;color:#fff;font-family:var(--nav-font);font-size:var(--instruction-size);font-weight:400;line-height:1.4;scrollbar-width:thin;scrollbar-color:#535b55 transparent}
+.gear{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);width:52px;height:52px;padding:12px;color:#88958c;background:transparent;border:0;border-radius:16px}.gear:hover{background:#18231d;color:#f0f6f2}.gear svg{width:28px;height:28px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linejoin:round}
+.settings{height:100%;display:flex;flex-direction:column;padding:22px 18px 15px}.settings-header{display:flex;align-items:center;gap:10px;flex-shrink:0;margin:0 8px 10px}.back{width:42px;height:42px;color:#f4f8f5;background:#17231b;border:0;border-radius:50%;font-size:24px}.settings h2{margin:0;font-size:23px;font-weight:500}
+.settings-body{min-height:0;flex:1;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#394b40 transparent;padding:0 6px 4px}.setting-block{margin:0 0 10px;border:0;padding:0;min-width:0}.setting-block legend,.setting-label{display:block;color:#b7c9bd;font-size:16px;margin-bottom:9px}
+.font-options{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}.font-choice{position:relative;cursor:pointer}.font-choice input{position:absolute;opacity:0;width:1px;height:1px}.font-choice span{display:block;text-align:center;padding:10px 2px;border:1px solid #2c3b31;border-radius:12px;background:#111914;font-size:18px}.font-choice input:checked+span{color:#cef2d9;border-color:#81b294;background:#263e30}.font-choice input:focus-visible+span{outline:2px solid #b0dbc0;outline-offset:2px}
+.stepper{display:grid;grid-template-columns:46px 1fr 46px;gap:8px;align-items:center}.stepper button{height:44px;padding:0;color:#d9e6dd;background:#1a281f;border:0;border-radius:12px;font-size:24px}.value{display:flex;align-items:baseline;justify-content:center;gap:4px}.value input{width:60px;border:0;border-bottom:1px solid #4b6856;background:transparent;color:#fff;text-align:center;padding:6px 0;font-size:23px;appearance:textfield;-moz-appearance:textfield}.value input::-webkit-inner-spin-button{appearance:none}.value small{color:#84968a;font-size:12px}
+.settings-footer{flex-shrink:0;padding-top:10px;text-align:center}.save-status{margin:0 0 4px;color:#95ad9f;font-size:12px;min-height:16px}.version{margin:0;color:#73857a;font-size:13px}
+.caption{font-size:12px;color:#718273;line-height:1.8;margin:16px 0 0;text-align:center}.aside{max-width:410px}.aside h2{font-size:27px;line-height:1.5;font-weight:600;margin:0 0 16px}.aside>p{font-size:15px;color:#627668;line-height:1.9;margin:0 0 24px}.summary{display:grid;grid-template-columns:1fr 1fr;gap:14px 28px;padding:20px 0;border-top:1px solid #d4ddd2;border-bottom:1px solid #d4ddd2;margin:0 0 24px}.summary dt{font-size:12px;color:#768777;margin-bottom:6px}.summary dd{font-size:19px;margin:0;color:#304d3b}
+.sample-label{display:block;font-size:13px;margin-bottom:8px;color:#617564}select{max-width:100%;width:100%;padding:12px;border:1px solid #ccd8ce;border-radius:10px;background:#fafbf8;color:#304837;font:inherit;font-size:14px}.note{font-size:12px!important;line-height:1.8!important;color:#7a877b!important;margin:14px 0!important}.aside a{font-size:13px}.footer{font-size:12px;color:#7b887d;margin-top:28px}
+@media(max-width:780px){body{padding:24px 14px}.workspace{grid-template-columns:1fr;gap:30px;margin-top:24px}.aside{max-width:440px;width:100%;margin:auto}h1{font-size:26px}.aside h2{font-size:24px}.strap{height:24px}}
+@media(max-width:370px){body{padding:22px 8px}.stage{zoom:.86}}
+</style>
+</head>
+<body>
+<div class="shell">
+<header><div class="eyebrow">腕上导航 / 显示设置</div><h1>指引居中，设置放在底部。</h1><p>轻点底部正中的齿轮，字体、字号和箭头都可以自己调。</p></header>
+<main class="workspace">
+<section class="stage" aria-label="可操作的手环预览">
+<div class="strap" aria-hidden="true"></div>
+<div class="device"><div class="screen" id="screen">
+<div class="navigation" id="navigation">
+<svg class="nav-arrow" viewBox="0 0 80 80" role="img" aria-label="直行" id="nav-arrow"><path id="arrow-path" d="M40 72V8M20 28L40 8L60 28" stroke-width="6"/></svg>
+<p class="instruction" id="instruction" tabindex="0" aria-label="完整导航文字">直行200米</p>
+<button class="gear" id="open-settings" aria-label="打开显示设置" aria-expanded="false" aria-controls="settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 3h5l.7 2.5 2.2 1.3 2.5-.6 2.5 4.3-1.8 1.8v2.5l1.8 1.8-2.5 4.3-2.5-.6-2.2 1.3-.7 2.4h-5l-.7-2.4-2.2-1.3-2.5.6-2.5-4.3 1.8-1.8v-2.5L1.6 10.5l2.5-4.3 2.5.6 2.2-1.3Z" transform="translate(1 0) scale(.9)"/><circle cx="12" cy="12" r="3.2"/></svg></button>
+</div>
+<section class="settings" id="settings" aria-label="显示设置" hidden>
+<div class="settings-header"><button class="back" id="close-settings" aria-label="返回导航">‹</button><h2>显示设置</h2></div>
+<div class="settings-body" id="settings-body">
+<fieldset class="setting-block"><legend>字体</legend><div class="font-options">
+<label class="font-choice"><input type="radio" name="font" value="default"><span>默认</span></label>
+<label class="font-choice"><input type="radio" name="font" value="song"><span style="font-family:BandSong,serif">宋体</span></label>
+<label class="font-choice"><input type="radio" name="font" value="kai"><span style="font-family:BandKai,serif">楷体</span></label>
+<label class="font-choice"><input type="radio" name="font" value="rounded"><span style="font-family:BandRounded,sans-serif">柔圆</span></label>
+</div></fieldset>
+<div class="setting-block"><label class="setting-label" for="font-size">文字大小</label><div class="stepper"><button data-field="fontSize" data-step="-1" aria-label="减小字号">−</button><div class="value"><input id="font-size" data-value="fontSize" type="number" min="24" max="44" step="1" inputmode="numeric" aria-label="字号，24至44"><small>px</small></div><button data-field="fontSize" data-step="1" aria-label="增大字号">＋</button></div></div>
+<div class="setting-block"><label class="setting-label" for="arrow-size">箭头大小</label><div class="stepper"><button data-field="arrowSize" data-step="-2" aria-label="缩小箭头">−</button><div class="value"><input id="arrow-size" data-value="arrowSize" type="number" min="56" max="100" step="1" inputmode="numeric" aria-label="箭头大小，56至100"><small>px</small></div><button data-field="arrowSize" data-step="2" aria-label="放大箭头">＋</button></div></div>
+<div class="setting-block"><label class="setting-label" for="arrow-weight">箭头粗细</label><div class="stepper"><button data-field="arrowWeight" data-step="-1" aria-label="减细箭头">−</button><div class="value"><input id="arrow-weight" data-value="arrowWeight" type="number" min="4" max="10" step="1" inputmode="numeric" aria-label="箭头粗细，4至10"><small>px</small></div><button data-field="arrowWeight" data-step="1" aria-label="加粗箭头">＋</button></div></div>
+</div>
+<div class="settings-footer"><p class="save-status" id="save-status" role="status" aria-live="polite">调整后自动保存</p><p class="version">腕上导航 v<span data-app-version>__APP_VERSION__</span></p></div>
+</section>
+</div></div><div class="strap bottom" aria-hidden="true"></div>
+<p class="caption">336 × 480 · 可操作设计预览<br>示例数据，非真机画面</p>
+</section>
+<aside class="aside">
+<h2>字体保留四种，<br>大小由你决定。</h2><p>点击底部正中的设置图标，使用 ＋ / − 或输入数值调整。返回导航即可查看效果，下次打开也会记住。</p>
+<dl class="summary"><div><dt>字体</dt><dd id="summary-font">默认字体</dd></div><div><dt>字号</dt><dd id="summary-size">34 px</dd></div><div><dt>箭头大小</dt><dd id="summary-arrow">78 px</dd></div><div><dt>箭头粗细</dt><dd id="summary-weight">6 px</dd></div></dl>
+<label class="sample-label" for="sample">预览示例</label><select id="sample"><option value="short">直行200米</option><option value="long">长文字换行 · 滑动查看完整内容</option></select>
+<p class="note">本页保留四字体设计原型，设置只保存在浏览器。最新 0.2.3 布局、放大的齿轮与设置交互请查看<a href="/">源码调试页</a>；手环包字体仍为系统默认，其余字体待验证。</p>
+<a id="design-link" href="/">打开当前手环源码预览 →</a>
+</aside>
+</main><footer class="footer">设置页版本号来自手环项目配置，当前为 v__APP_VERSION__。</footer>
+</div>
+<script>
+const preferences = (__PREFERENCES_FACTORY__)();
+let storage;
+try { storage = window.localStorage; } catch { /* Private contexts may block persistence. */ }
+let state = preferences.read(storage);
+const screen = document.getElementById('screen');
+const fontFamilies = { default:'"Microsoft YaHei",system-ui,sans-serif', song:'BandSong,serif', kai:'BandKai,serif', rounded:'BandRounded,sans-serif' };
+const fontNames = { default:'默认字体', song:'宋体', kai:'楷体', rounded:'柔圆' };
+const numericInputs = [...document.querySelectorAll('[data-value]')];
+const steppers = [...document.querySelectorAll('[data-step]')];
+function render() {
+  screen.style.setProperty('--instruction-size', state.fontSize + 'px');
+  screen.style.setProperty('--arrow-size', state.arrowSize + 'px');
+  screen.style.setProperty('--nav-font', fontFamilies[state.font]);
+  // Keep stroke thickness independent of the SVG's displayed size.
+  document.getElementById('arrow-path').setAttribute('stroke-width', state.arrowWeight * 80 / state.arrowSize);
+  document.querySelectorAll('input[name=font]').forEach(input => { input.checked = input.value === state.font; });
+  numericInputs.forEach(input => { input.value = state[input.dataset.value]; });
+  steppers.forEach(button => {
+    const field = button.dataset.field;
+    const [min, max] = preferences.bounds[field];
+    button.disabled = Number(button.dataset.step) < 0 ? state[field] <= min : state[field] >= max;
+  });
+  document.getElementById('summary-font').textContent = fontNames[state.font];
+  document.getElementById('summary-size').textContent = state.fontSize + ' px';
+  document.getElementById('summary-arrow').textContent = state.arrowSize + ' px';
+  document.getElementById('summary-weight').textContent = state.arrowWeight + ' px';
+}
+function update(patch) {
+  state = preferences.normalize({ ...state, ...patch });
+  render();
+  try {
+    preferences.write(storage, state);
+    document.getElementById('save-status').textContent = '已保存';
+  } catch { document.getElementById('save-status').textContent = '本次已应用，无法保存到浏览器'; }
+}
+function setOpen(open) {
+  document.getElementById('settings').hidden = !open;
+  document.getElementById('navigation').hidden = open;
+  document.getElementById('open-settings').setAttribute('aria-expanded', String(open));
+  (open ? document.getElementById('close-settings') : document.getElementById('open-settings')).focus();
+}
+document.getElementById('open-settings').addEventListener('click', () => setOpen(true));
+document.getElementById('close-settings').addEventListener('click', () => setOpen(false));
+document.addEventListener('keydown', event => { if (event.key === 'Escape' && !document.getElementById('settings').hidden) setOpen(false); });
+document.querySelectorAll('input[name=font]').forEach(input => input.addEventListener('change', () => update({ font:input.value })));
+steppers.forEach(button => button.addEventListener('click', () => update({ [button.dataset.field]:state[button.dataset.field] + Number(button.dataset.step) })));
+numericInputs.forEach(input => {
+  const commit = () => {
+    const value = input.value.trim() === '' ? NaN : Number(input.value);
+    if (!Number.isFinite(value)) { render(); return; }
+    update({ [input.dataset.value]:value });
+  };
+  input.addEventListener('change', commit);
+  input.addEventListener('keydown', event => { if (event.key === 'Enter') { commit(); input.blur(); } });
+});
+document.getElementById('sample').addEventListener('change', event => {
+  document.getElementById('instruction').textContent = event.target.value === 'long'
+    ? '沿示例道路直行200米\n经过示例路口后继续直行，请注意路况。\n这是一段用于检查换行的较长示例文字，所有内容均保留，可上下滑动查看。'
+    : '直行200米';
+  document.getElementById('instruction').scrollTop = 0;
+});
+if (location.protocol === 'file:') document.getElementById('design-link').href = 'wearable-source.html';
+render();
+</script>
+</body></html>

@@ -1,50 +1,53 @@
-// Static design preview using the same template, styles and display projection as the RPK.
-// Browser fonts/rendering differ from Vela. Example data stays outside wearable/src.
+// Execute the actual UX page script and template in a browser adapter.
+// Native APIs and rendering are simulated; this is not a Vela firmware emulator.
 const fs = require('node:fs');
 const path = require('node:path');
-const presentation = require('../wearable/src/common/presentation');
-const protocol = require('../wearable/src/common/protocol');
 const root = path.resolve(__dirname, '..');
 const source = fs.readFileSync(path.join(root, 'wearable/src/pages/index/index.ux'), 'utf8');
-const template = source.match(/<template>([\s\S]*?)<\/template>/)[1];
-const styles = source.match(/<style>([\s\S]*?)<\/style>/)[1];
-const escape = value => String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-function render(view) {
-  const model = { ...view, ...presentation.layout(view) };
-  model.icon = '/common/' + view.icon + '.png';
-  model.rawLines = presentation.lines(model.details);
-  let markup = template.replace(/<list-item[^>]*class="detail-row"[^>]*>[\s\S]*?<\/list-item>/,
-    model.rawLines.map(line => '<div class="detail-row"><div class="raw">' + escape(line) + '</div></div>').join(''));
-  markup = markup.replace(/{{\s*(!?)([a-zA-Z]+)\s*}}/g, (_, negate, key) => escape(negate ? !model[key] : model[key]));
-  markup = markup.replace(/show="false"/g, 'hidden').replace(/show="true"/g, '')
-    .replace(/<text/g, '<div').replace(/<\/text>/g, '</div>')
-    .replace(/<list/g, '<div').replace(/<\/list>/g, '</div>')
-    .replace(/<image class="arrow" src="([^"]+)"><\/image>/g, (_, uri) =>
-      '<img class="arrow" alt="" src="data:image/png;base64,' + fs.readFileSync(path.join(root, 'wearable/src', uri)).toString('base64') + '">');
-  return '<div class="band">' + markup + '</div>';
+const manifest = require('../wearable/src/manifest.json');
+const bundle = {
+  template: source.match(/<template>([\s\S]*?)<\/template>/)[1],
+  script: source.match(/<script>([\s\S]*?)<\/script>/)[1].replace('export default', 'module.exports ='),
+  modules: {}, images: {}
+};
+for (const name of ['protocol', 'presentation', 'settings', 'font-coverage']) {
+  bundle.modules['../../common/' + name] = fs.readFileSync(path.join(root, 'wearable/src/common', name + '.js'), 'utf8');
 }
-const sample = (distance, maneuver, instruction, rawText) => protocol.present({
-  status: 'active', distance, maneuver, instruction, rawText
-}, 0, true);
-const views = [
-  ['01 / 路口转向', sample('200 米', 'right', '右转', '200米右转\n进入示例路\n高德导航中')],
-  ['02 / 长距离指引', sample('1.2 公里', 'straight', '沿当前道路直行', '1.2公里沿当前道路直行\n高德导航中')],
-  ['03 / 等待导航', protocol.present(null, 0, true)]
-];
+bundle.modules['../../manifest.json'] = 'module.exports = ' + JSON.stringify(manifest);
+function images(directory) {
+  for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+    const file = path.join(directory, entry.name);
+    if (entry.isDirectory()) images(file);
+    else if (entry.name.endsWith('.png')) bundle.images['/' + path.relative(path.join(root, 'wearable/src'), file).replace(/\\/g, '/')] =
+      'data:image/png;base64,' + fs.readFileSync(file).toString('base64');
+  }
+}
+images(path.join(root, 'wearable/src/common'));
+const styles = source.match(/<style>([\s\S]*?)<\/style>/)[1].replace(/url\('\/common\/fonts\/([^']+)'\)/g,
+  (_, name) => "url('data:font/ttf;base64," + fs.readFileSync(path.join(root, 'wearable/src/common/fonts', name)).toString('base64') + "')");
+const runtime = fs.readFileSync(path.join(__dirname, 'preview-runtime.js'), 'utf8');
 const html = `<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>腕上导航 · 手环界面 0.2.1</title><style>
-*{box-sizing:border-box}body{margin:0;background:#f0f3ed;color:#25382c;font-family:"Microsoft YaHei",sans-serif;padding:42px}
-h1{font-size:30px;font-weight:600;margin:0 0 10px}p{color:#6b7d70;font-size:14px;margin:0 0 32px}
-main{display:flex;gap:32px;flex-wrap:wrap}.caption{font-size:13px;letter-spacing:1px;color:#607667;margin:20px 6px 0}
-.band{width:352px;height:496px;padding:8px;border-radius:52px;background:#26372c;box-shadow:0 20px 36px #17261a20;overflow:hidden}
-.page{border-radius:44px;overflow:hidden}.page div{display:flex;flex-shrink:0;border-style:solid;border-width:0}.page{display:flex;flex-shrink:0}
-.page [hidden]{display:none!important}.details{overflow:hidden;display:block!important}.detail-row{display:block!important}
-.raw,.status,.distance,.unit,.instruction,.rest-title,.rest-hint{display:block!important;white-space:pre-wrap;overflow:hidden}
-.instruction{display:flex!important;align-items:center}.rest-hint{overflow:hidden}
+<title>腕上导航 · ${manifest.versionName} 本地调试</title><style>
+*{box-sizing:border-box}body{margin:0;background:#f0f3ed;color:#25382c;font-family:"Microsoft YaHei",sans-serif;padding:32px}
+h1{font-size:28px;margin:0 0 12px}.intro{font-size:14px;line-height:1.8;margin:0 0 22px;max-width:1000px}
+main{display:flex;gap:28px;flex-wrap:wrap}.caption{font-size:14px;margin:16px 4px 0}.controls{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px}
+button{border:1px solid #afbeb1;border-radius:9px;padding:9px 14px;background:#fff;color:#25382c;cursor:pointer}
+button.selected{background:#25382c;color:#fff}.band{width:352px;height:496px;padding:8px;border-radius:52px;background:#26372c;box-shadow:0 16px 30px #17261a20;overflow:hidden}
+.page{border-radius:44px;overflow:hidden}.page :where(div){display:flex;position:relative}.page{display:flex}
+.page :where(p){margin:0;white-space:pre-wrap;overflow:hidden;font-weight:400}.page img{display:block}
+.page [style*="font-family: sans-serif"]{font-family:"Microsoft YaHei",sans-serif!important}
+.page [role=button]{cursor:pointer}.page [role=button]:focus-visible{outline:2px solid #80f5be;outline-offset:-3px}
+.page [data-type=list]{display:block;overflow-y:auto;scrollbar-width:none}.page [data-type=list-item]{display:block}
 ${styles}
-</style><h1>腕上导航，换一种清晰。</h1><p>手环 0.2.1 设计预览 · 336 × 480 · 示例数据，非真机截图</p><main>
-${views.map(([caption, view]) => '<section>' + render(view) + '<div class="caption">' + caption + '</div></section>').join('')}
-</main></html>`;
-const output = path.join(root, 'outputs/wearable-ui-021.html');
+@media(max-width:600px){body{padding:16px}h1{font-size:24px}main{gap:24px}}
+</style><h1>腕上导航 · ${manifest.versionName} 本地交互调试</h1>
+<p class="intro">点击手环中的齿轮、加减和返回，执行与安装包相同的页面代码。设置保存在当前浏览器。下方按钮切换第一个手环的模拟状态。<br>336 × 480；浏览器模拟通信、存储与亮屏接口，不是 Vela 模拟器或真机验收。</p>
+<div class="controls" aria-label="模拟状态">
+${[['active','正常导航'],['long','长文字'],['idle','等待导航'],['disconnected','断开连接'],['ended','导航结束'],['paused','同步暂停'],['expired','消息过期'],['error','连接错误']].map(([state,label]) => `<button data-scene="${state}">${label}</button>`).join('')}
+<button id="reset">恢复预览默认值</button></div>
+<main>${['导航 / 可操作','等待导航 / 可操作','显示设置 / 可操作','长文字与最大字号'].map((caption,i)=>`<section><div class="band" id="band-${i}"></div><p class="caption">${caption}</p></section>`).join('')}</main>
+<script>const bundle=${JSON.stringify(bundle).replace(/</g,'\\u003c')};\n${runtime}</script></html>`;
+const output = path.join(root, 'outputs/previews/wearable-source.html');
+fs.mkdirSync(path.dirname(output), { recursive: true });
 fs.writeFileSync(output, html);
 console.log(output);

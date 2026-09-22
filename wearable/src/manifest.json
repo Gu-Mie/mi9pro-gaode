@@ -2,8 +2,8 @@
   "package": "io.github.mi9pro.navigation",
   "name": "腕上导航",
   "icon": "/common/icon.png",
-  "versionName": "0.2.1",
-  "versionCode": 6,
+  "versionName": "0.2.4",
+  "versionCode": 9,
   "minAPILevel": 1,
   "deviceTypeList": [
     "watch"
@@ -14,6 +14,9 @@
     },
     {
       "name": "system.brightness"
+    },
+    {
+      "name": "system.storage"
     }
   ],
   "config": {

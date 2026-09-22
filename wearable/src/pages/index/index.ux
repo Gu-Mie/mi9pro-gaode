@@ -1,53 +1,94 @@
 <template>
   <div class="page">
-    <div class="header">
-      <div class="status-dot" style="background-color: {{ statusColor }};"></div>
-      <text class="status">{{ header }}</text>
-    </div>
-    <div class="navigation" show="{{ guidance }}">
-      <div class="maneuver">
-        <image class="arrow" src="{{ icon }}"></image>
-        <div class="metric">
-          <text class="distance" style="font-size: {{ distanceSize }}px;">{{ distanceValue }}</text>
-          <text class="unit">{{ distanceUnit }}</text>
-        </div>
+    <div class="home" if="{{ !settingsOpen }}">
+      <text class="demo-label" if="{{ demo }}" style="font-size: {{ auxiliarySize }}px; font-family: {{ fontFamily }};">演示 · 非真实导航</text>
+      <div class="navigation-stage" if="{{ guidance }}" style="top: {{ contentTop }}px; height: {{ contentHeight }}px;">
+        <image class="arrow" src="{{ arrowSrc }}" style="left: {{ arrowLeft }}px; width: {{ arrowSize }}px; height: {{ arrowSize }}px;"></image>
+        <list class="guidance-list" style="top: {{ guidanceTop }}px; height: {{ guidanceHeight }}px;">
+          <list-item for="{{ guidanceLines }}" type="guidance" class="guidance-row" style="height: {{ rowHeight }}px;">
+            <text class="guidance-text" style="height: {{ rowHeight }}px; line-height: {{ rowHeight }}px; font-size: {{ fontSize }}px; font-family: {{ guidanceFontFamily }};">{{ $item }}</text>
+          </list-item>
+        </list>
       </div>
-      <div class="instruction-card">
-        <div class="instruction-mark"></div>
-        <text class="instruction">{{ instruction }}</text>
+      <div class="rest" if="{{ !guidance }}" style="top: {{ restTop }}px; height: {{ restHeight }}px;">
+        <div class="rest-titles" style="height: {{ restTitleHeight }}px;">
+          <text for="{{ titleLines }}" class="rest-title" style="height: {{ titleHeight }}px; line-height: {{ titleHeight }}px; font-size: {{ fontSize }}px; font-family: {{ fontFamily }};">{{ $item }}</text>
+        </div>
+        <div class="rest-hints" style="top: {{ hintTop }}px; height: {{ hintsHeight }}px;">
+          <text for="{{ hintLines }}" class="rest-hint" style="height: {{ hintHeight }}px; line-height: {{ hintHeight }}px; font-size: {{ hintSize }}px; font-family: {{ fontFamily }};">{{ $item }}</text>
+        </div>
+        <list class="details" if="{{ hasDetails }}" style="top: {{ detailsTop }}px; height: {{ detailsHeight }}px;">
+          <list-item for="{{ rawLines }}" type="detail" class="detail-row" style="height: {{ hintHeight }}px;">
+            <text class="raw" style="height: {{ hintHeight }}px; line-height: {{ hintHeight }}px; font-size: {{ hintSize }}px; font-family: {{ detailsFontFamily }};">{{ $item }}</text>
+          </list-item>
+        </list>
+      </div>
+      <div class="settings-entry" onclick="openSettings">
+        <image class="settings-icon" src="/common/settings.png"></image>
       </div>
     </div>
-    <div class="rest" show="{{ !guidance }}">
-      <div class="rest-symbol">
-        <div class="phone-symbol">
-          <div class="phone-speaker"></div>
-          <div class="phone-home"></div>
-        </div>
-        <div class="transfer">
-          <div class="transfer-dot"></div>
-          <div class="transfer-dot"></div>
-          <div class="transfer-dot"></div>
-        </div>
-        <div class="band-symbol">
-          <div class="band-strap"></div>
-          <div class="band-face"></div>
-          <div class="band-strap"></div>
-        </div>
-      </div>
-      <text class="rest-title">{{ status }}</text>
-      <text class="rest-hint">{{ hint }}</text>
+    <div class="settings" if="{{ settingsOpen }}">
+      <text class="back" onclick="settingsBack">‹</text>
+      <text class="settings-title" style="font-size: {{ fontSize }}px; height: {{ titleHeight }}px; line-height: {{ titleHeight }}px; font-family: {{ fontFamily }};">{{ fontPickerOpen ? '选择字体' : '显示设置' }}</text>
+      <list class="settings-list" if="{{ !fontPickerOpen }}" style="top: {{ settingsListTop }}px; height: {{ settingsListHeight }}px;">
+        <list-item type="font" class="font-row" style="height: {{ fontRowHeight }}px;">
+          <div class="font-selector" onclick="openFonts" style="height: {{ fontSelectorHeight }}px;">
+            <text class="font-label" style="height: {{ fontSelectorHeight }}px; line-height: {{ fontSelectorHeight }}px; font-size: {{ labelSize }}px; font-family: {{ fontFamily }};">字体</text>
+            <text class="font-name" style="height: {{ fontSelectorHeight }}px; line-height: {{ fontSelectorHeight }}px; font-size: {{ labelSize }}px; font-family: {{ fontFamily }};">{{ fontName }}</text>
+            <text class="font-chevron" style="height: {{ fontSelectorHeight }}px; line-height: {{ fontSelectorHeight }}px;">›</text>
+          </div>
+        </list-item>
+        <list-item type="font-size" class="setting-block font-size-row" style="height: {{ settingRowHeight }}px;">
+          <text class="setting-label" style="font-size: {{ labelSize }}px; height: {{ labelHeight }}px; line-height: {{ labelHeight }}px; font-family: {{ fontFamily }};">文字大小</text>
+          <div class="stepper" style="top: {{ controlTop }}px; height: {{ buttonHeight }}px;">
+            <text class="adjust decrease" onclick="adjust('fontSize', -1)" style="height: {{ buttonHeight }}px; line-height: {{ buttonHeight }}px; font-size: {{ adjustSize }}px;">−</text>
+            <text class="setting-value" style="height: {{ buttonHeight }}px; line-height: {{ buttonHeight }}px; font-size: {{ fontSize }}px; font-family: {{ fontFamily }};">{{ fontSize }}</text>
+            <text class="adjust increase" onclick="adjust('fontSize', 1)" style="height: {{ buttonHeight }}px; line-height: {{ buttonHeight }}px; font-size: {{ adjustSize }}px;">+</text>
+          </div>
+        </list-item>
+        <list-item type="arrow-size" class="setting-block arrow-size-row" style="height: {{ settingRowHeight }}px;">
+          <text class="setting-label" style="font-size: {{ labelSize }}px; height: {{ labelHeight }}px; line-height: {{ labelHeight }}px; font-family: {{ fontFamily }};">箭头大小</text>
+          <div class="stepper" style="top: {{ controlTop }}px; height: {{ buttonHeight }}px;">
+            <text class="adjust decrease" onclick="adjust('arrowSize', -2)" style="height: {{ buttonHeight }}px; line-height: {{ buttonHeight }}px; font-size: {{ adjustSize }}px;">−</text>
+            <text class="setting-value" style="height: {{ buttonHeight }}px; line-height: {{ buttonHeight }}px; font-size: {{ fontSize }}px; font-family: {{ fontFamily }};">{{ arrowSize }}</text>
+            <text class="adjust increase" onclick="adjust('arrowSize', 2)" style="height: {{ buttonHeight }}px; line-height: {{ buttonHeight }}px; font-size: {{ adjustSize }}px;">+</text>
+          </div>
+        </list-item>
+        <list-item type="arrow-weight" class="setting-block arrow-weight-row" style="height: {{ settingRowHeight }}px;">
+          <text class="setting-label" style="font-size: {{ labelSize }}px; height: {{ labelHeight }}px; line-height: {{ labelHeight }}px; font-family: {{ fontFamily }};">箭头粗细</text>
+          <div class="stepper" style="top: {{ controlTop }}px; height: {{ buttonHeight }}px;">
+            <text class="adjust decrease" onclick="adjust('arrowWeight', -1)" style="height: {{ buttonHeight }}px; line-height: {{ buttonHeight }}px; font-size: {{ adjustSize }}px;">−</text>
+            <text class="setting-value" style="height: {{ buttonHeight }}px; line-height: {{ buttonHeight }}px; font-size: {{ fontSize }}px; font-family: {{ fontFamily }};">{{ arrowWeight }}</text>
+            <text class="adjust increase" onclick="adjust('arrowWeight', 1)" style="height: {{ buttonHeight }}px; line-height: {{ buttonHeight }}px; font-size: {{ adjustSize }}px;">+</text>
+          </div>
+        </list-item>
+        <list-item type="footer" class="settings-footer" style="height: {{ footerHeight }}px;">
+          <text class="save-status" style="font-size: {{ auxiliarySize }}px; height: {{ auxiliaryHeight }}px; line-height: {{ auxiliaryHeight }}px; font-family: {{ fontFamily }};">{{ saveStatus }}</text>
+          <text class="version" style="top: {{ auxiliaryHeight + 4 }}px; font-size: {{ auxiliarySize }}px; height: {{ auxiliaryHeight }}px; line-height: {{ auxiliaryHeight }}px; font-family: {{ fontFamily }};">腕上导航 v{{ versionName }}</text>
+        </list-item>
+        <list-item type="reset" class="reset-row" style="height: {{ buttonHeight + 16 }}px;">
+          <text class="reset-defaults" onclick="resetSettings" style="font-size: {{ labelSize }}px; height: {{ buttonHeight }}px; line-height: {{ buttonHeight }}px; font-family: {{ fontFamily }};">恢复默认</text>
+        </list-item>
+      </list>
+      <list class="font-options" if="{{ fontPickerOpen }}" style="top: {{ settingsListTop }}px; height: {{ settingsListHeight }}px;">
+        <list-item for="{{ fontOptions }}" type="font-choice" class="font-choice-row" style="height: {{ fontChoiceHeight + 12 }}px;">
+          <div class="font-choice" onclick="selectFont($item.id)" style="height: {{ fontChoiceHeight }}px; background-color: {{ font === $item.id ? '#253b2c' : '#101a14' }};">
+            <text class="choice-name" style="font-size: {{ labelSize }}px; height: {{ labelHeight }}px; line-height: {{ labelHeight }}px; font-family: {{ fontFamily }};">{{ $item.name }}</text>
+            <text class="choice-selected" if="{{ font === $item.id }}" style="font-size: {{ auxiliarySize }}px; height: {{ labelHeight }}px; line-height: {{ labelHeight }}px;">已选</text>
+            <text class="choice-sample" style="top: {{ labelHeight + 8 }}px; font-family: {{ $item.family }}; font-size: {{ fontSize }}px; height: {{ titleHeight }}px; line-height: {{ titleHeight }}px;">直行200米</text>
+          </div>
+        </list-item>
+      </list>
     </div>
-    <list class="details">
-      <list-item for="{{ rawLines }}" type="detail" class="detail-row">
-        <text class="raw">{{ $item }}</text>
-      </list-item>
-    </list>
   </div>
 </template>
 
 <script>
 const protocol = require('../../common/protocol')
 const presentation = require('../../common/presentation')
+const settings = require('../../common/settings')
+const manifest = require('../../manifest.json')
+let preferenceStore = null
 let connection = null
 let latest = null
 let receivedAt = 0
@@ -62,6 +103,41 @@ let screenError = ''
 
 export default {
   private: {
+    settingsOpen: false,
+    font: settings.DEFAULTS.font,
+    fontSize: settings.DEFAULTS.fontSize,
+    arrowSize: settings.DEFAULTS.arrowSize,
+    arrowWeight: settings.DEFAULTS.arrowWeight,
+    fontPickerOpen: false,
+    fontOptions: settings.FONT_OPTIONS,
+    fontFamily: 'sans-serif',
+    guidanceFontFamily: 'sans-serif',
+    detailsFontFamily: 'sans-serif',
+    fontName: '系统默认',
+    labelSize: 24, hintSize: 22, auxiliarySize: 18,
+    titleHeight: 42, labelHeight: 28, hintHeight: 31, auxiliaryHeight: 23,
+    buttonHeight: 52, controlTop: 32, settingRowHeight: 96,
+    fontSelectorHeight: 44, fontRowHeight: 56, footerHeight: 50,
+    adjustSize: 35, fontChoiceHeight: 86,
+    settingsListTop: 66, settingsListHeight: 398,
+    titleLines: [], restTitleHeight: 42, hintTop: 54, hintsHeight: 62,
+    saveStatus: '调整后自动保存',
+    versionName: manifest.versionName,
+    guidanceLines: [' '],
+    guidanceHeight: 48,
+    rowHeight: 48,
+    contentTop: 167,
+    contentHeight: 146,
+    arrowLeft: 105,
+    guidanceTop: 98,
+    hintLines: [],
+    hasDetails: false,
+    detailsTop: 0,
+    detailsHeight: 0,
+    restTop: 184,
+    restHeight: 112,
+    demo: false,
+    arrowSrc: '/common/arrows/6/unknown.png',
     status: '等待导航',
     icon: '/common/unknown.png',
     distance: '',
@@ -76,6 +152,11 @@ export default {
     hint: '在手机上连接小米运动健康'
   },
   onInit() {
+    if (preferenceStore) preferenceStore.dispose()
+    preferenceStore = null
+    this.settingsOpen = false
+    this.fontPickerOpen = false
+    this.applySettings(settings.DEFAULTS)
     latest = null
     receivedAt = 0
     connected = false
@@ -87,7 +168,70 @@ export default {
     this.paint()
   },
   // Establish interconnect only after the first screen has been created.
-  onReady() { this.retry() },
+  onReady() {
+    this.loadSettings()
+    this.retry()
+  },
+  loadSettings() {
+    if (!alive || preferenceStore) return
+    try {
+      preferenceStore = settings.createStore(require('@system.storage'),
+        value => { if (alive) { this.applySettings(value); this.paint() } },
+        value => { if (alive) this.saveStatus = value })
+      preferenceStore.load()
+    } catch (error) { this.saveStatus = '本次调整无法保存' }
+  },
+  applySettings(value) {
+    const checked = settings.normalize(value)
+    this.font = checked.font
+    this.fontName = settings.fontOption(checked.font).name
+    this.fontFamily = settings.fontOption(checked.font).family
+    const type = presentation.typography(checked.fontSize)
+    for (const field of Object.keys(type)) this[field] = type[field]
+    this.settingsListTop = Math.max(66, 16 + type.titleHeight + 8)
+    this.settingsListHeight = 464 - this.settingsListTop
+    this.fontSize = checked.fontSize
+    this.arrowSize = checked.arrowSize
+    this.arrowWeight = checked.arrowWeight
+  },
+  adjust(field, change) {
+    if (!alive || !settings.LIMITS[field]) return
+    const value = this.currentSettings()
+    value[field] += Number(change)
+    const checked = settings.normalize(value)
+    if (this[field] === checked[field]) return
+    this.saveSettings(checked)
+  },
+  currentSettings() {
+    return { font: this.font, fontSize: this.fontSize, arrowSize: this.arrowSize, arrowWeight: this.arrowWeight }
+  },
+  saveSettings(value) {
+    if (!alive) return
+    const checked = settings.normalize(value)
+    this.applySettings(checked)
+    this.paint()
+    if (preferenceStore) preferenceStore.save(checked)
+    else this.saveStatus = '本次调整无法保存'
+  },
+  resetSettings() { this.saveSettings(settings.DEFAULTS) },
+  openFonts() { this.fontPickerOpen = true },
+  selectFont(id) {
+    if (!alive || settings.FONTS.indexOf(id) < 0) return
+    const value = this.currentSettings()
+    value.font = id
+    this.saveSettings(value)
+    this.fontPickerOpen = false
+  },
+  openSettings() { this.settingsOpen = true; this.fontPickerOpen = false; this.paint() },
+  closeSettings() { this.fontPickerOpen = false; this.settingsOpen = false; this.paint() },
+  settingsBack() {
+    if (this.fontPickerOpen) this.fontPickerOpen = false
+    else this.closeSettings()
+  },
+  onBackPress() {
+    if (this.settingsOpen) { this.settingsBack(); return true }
+    return false
+  },
   onShow() {
     visible = true
     this.paint()
@@ -100,6 +244,8 @@ export default {
     this.keepScreenOn(false)
   },
   onDestroy() {
+    if (preferenceStore) preferenceStore.dispose()
+    preferenceStore = null
     alive = false
     visible = false
     // Release again if the previous off request failed or is still pending.
@@ -208,7 +354,7 @@ export default {
     const now = Date.now()
     const age = now - receivedAt
     let view = protocol.present(latest, age, connected)
-    this.keepScreenOn(visible && !!view.live && latest.keepScreenOn !== false)
+    this.keepScreenOn(visible && !this.settingsOpen && !!view.live && latest.keepScreenOn !== false)
     if (connectionError) {
       view.status = '连接不可用'
       view.rawText = connectionError
@@ -220,43 +366,77 @@ export default {
     if (this.distance !== view.distance) this.distance = view.distance
     if (this.instruction !== view.instruction) this.instruction = view.instruction
     const layout = presentation.layout(view)
+    this.demo = view.status === '演示 · 非真实导航'
+    this.arrowSrc = '/common/arrows/' + this.arrowWeight + '/' + view.icon + '.png'
+    const navigation = presentation.navigationLayout(view, this, screenError)
+    for (const field of ['rowHeight', 'guidanceHeight', 'contentTop', 'contentHeight', 'arrowLeft', 'guidanceTop']) {
+      if (this[field] !== navigation[field]) this[field] = navigation[field]
+    }
+    if (navigation.guidanceLines.join('\n') !== this.guidanceLines.join('\n')) this.guidanceLines = navigation.guidanceLines
     for (const field of ['header', 'guidance', 'statusColor', 'distanceValue', 'distanceUnit', 'distanceSize', 'hint']) {
       if (this[field] !== layout[field]) this[field] = layout[field]
     }
-    const lines = presentation.lines(layout.details + (screenError ? '\n' + screenError : ''))
+    this.guidanceFontFamily = settings.fontForText(this.font, navigation.guidanceLines.join(''))
+    const rest = presentation.restLayout(view, screenError, this)
+    this.detailsFontFamily = settings.fontForText(this.font, rest.rawLines.join(''))
+    if (rest.titleLines.join('\n') !== this.titleLines.join('\n')) this.titleLines = rest.titleLines
+    for (const field of ['restTitleHeight', 'hintTop', 'hintsHeight', 'hasDetails', 'detailsTop', 'detailsHeight', 'restTop', 'restHeight']) {
+      if (this[field] !== rest[field]) this[field] = rest[field]
+    }
+    if (rest.hintLines.join('\n') !== this.hintLines.join('\n')) this.hintLines = rest.hintLines
     // Unchanged heartbeats renew expiry without rebuilding native views.
-    if (lines.join('\n') !== this.rawLines.join('\n')) this.rawLines = lines
+    if (rest.rawLines.join('\n') !== this.rawLines.join('\n')) this.rawLines = rest.rawLines
   }
 }
 </script>
 
 <style>
-.page { width: 336px; height: 480px; background-color: #000000; flex-direction: column; align-items: center; }
-.header { width: 280px; height: 28px; margin-top: 28px; flex-direction: row; align-items: center; }
-.status-dot { width: 6px; height: 6px; border-width: 1px; border-color: #000000; border-radius: 3px; margin-right: 10px; }
-.status { width: 264px; height: 28px; color: #9aafa0; font-size: 18px; line-height: 28px; }
-.navigation { width: 288px; height: 270px; margin-top: 24px; flex-direction: column; }
-.maneuver { width: 288px; height: 146px; flex-direction: row; align-items: center; }
-.arrow { width: 112px; height: 132px; object-fit: contain; }
-.metric { width: 164px; height: 130px; margin-left: 12px; flex-direction: column; justify-content: center; }
-.distance { width: 164px; height: 88px; color: #f4f8f1; font-size: 72px; line-height: 88px; font-weight: bold; lines: 1; }
-.unit { width: 164px; height: 30px; color: #9aafa0; font-size: 22px; line-height: 30px; }
-.instruction-card { width: 288px; height: 104px; margin-top: 20px; background-color: #142119; border-width: 1px; border-color: #23362a; border-radius: 22px; flex-direction: row; align-items: center; }
-.instruction-mark { width: 4px; height: 30px; margin-left: 18px; background-color: #80f5be; border-width: 1px; border-color: #80f5be; border-radius: 2px; }
-.instruction { width: 230px; height: 72px; margin-left: 14px; color: #f4f8f1; font-size: 28px; line-height: 36px; font-weight: bold; lines: 2; text-overflow: ellipsis; }
-.rest { width: 288px; height: 270px; margin-top: 24px; flex-direction: column; align-items: center; }
-.rest-symbol { width: 154px; height: 120px; margin-top: 12px; background-color: #101c15; border-width: 1px; border-color: #23362a; border-radius: 32px; flex-direction: row; align-items: center; justify-content: center; }
-.phone-symbol { width: 32px; height: 60px; border-width: 2px; border-color: #80f5be; border-radius: 8px; flex-direction: column; align-items: center; justify-content: space-between; }
-.phone-speaker { width: 10px; height: 2px; margin-top: 6px; background-color: #80f5be; }
-.phone-home { width: 8px; height: 2px; margin-bottom: 6px; background-color: #80f5be; }
-.transfer { width: 40px; height: 8px; flex-direction: row; align-items: center; justify-content: center; }
-.transfer-dot { width: 3px; height: 3px; margin-left: 3px; margin-right: 3px; background-color: #526f5d; }
-.band-symbol { width: 30px; height: 68px; flex-direction: column; align-items: center; }
-.band-strap { width: 14px; height: 12px; background-color: #2b4937; border-width: 1px; border-color: #2b4937; border-radius: 3px; }
-.band-face { width: 30px; height: 44px; border-width: 2px; border-color: #80f5be; border-radius: 9px; }
-.rest-title { width: 288px; height: 42px; margin-top: 26px; color: #f4f8f1; font-size: 30px; line-height: 42px; text-align: center; font-weight: bold; }
-.rest-hint { width: 248px; height: 56px; margin-top: 12px; color: #9aafa0; font-size: 19px; line-height: 28px; lines: 2; text-align: center; }
-.details { width: 288px; height: 84px; margin-top: 16px; }
-.detail-row { width: 288px; height: 28px; }
-.raw { width: 288px; height: 28px; color: #9aafa0; font-size: 20px; line-height: 28px; }
+@font-face { font-family: BandSong; src: url('/common/fonts/BandSong.ttf'); }
+@font-face { font-family: BandKai; src: url('/common/fonts/BandKai.ttf'); }
+@font-face { font-family: BandRound; src: url('/common/fonts/BandRound.ttf'); }
+.page { position: relative; width: 336px; height: 480px; background-color: #000000; }
+.home { position: absolute; top: 0px; left: 0px; width: 336px; height: 480px; }
+.navigation-stage { position: absolute; left: 24px; width: 288px; height: 110px; }
+.arrow { position: absolute; top: 0px; width: 42px; height: 42px; object-fit: contain; }
+.guidance-list { position: absolute; left: 0px; width: 288px; height: 42px; }
+.guidance-row { width: 288px; height: 42px; flex-shrink: 0; }
+.guidance-text { width: 288px; height: 42px; color: #ffffff; font-size: 30px; line-height: 42px; text-align: center; }
+.settings-entry { position: absolute; left: 136px; top: 400px; width: 64px; height: 64px; border-radius: 32px; background-color: #101a14; }
+.settings-icon { position: absolute; left: 11px; top: 11px; width: 42px; height: 42px; object-fit: contain; }
+.demo-label { position: absolute; top: 26px; left: 24px; width: 288px; height: 38px; color: #d4b57b; text-align: center; }
+.rest { position: absolute; left: 24px; width: 288px; height: 116px; }
+.rest-titles { position: absolute; top: 0px; left: 0px; width: 288px; flex-direction: column; }
+.rest-title { width: 288px; flex-shrink: 0; color: #f4f8f1; text-align: center; }
+.rest-hints { position: absolute; left: 0px; width: 288px; flex-direction: column; }
+.rest-hint { width: 288px; flex-shrink: 0; color: #9aafa0; text-align: center; }
+.details { position: absolute; left: 0px; width: 288px; height: 84px; }
+.detail-row { width: 288px; height: 31px; }
+.raw { width: 288px; color: #9aafa0; text-align: center; }
+.settings { position: absolute; top: 0px; left: 0px; width: 336px; height: 480px; background-color: #000000; }
+.back { position: absolute; left: 20px; top: 14px; width: 44px; height: 48px; color: #ffffff; font-size: 38px; line-height: 48px; text-align: center; }
+.settings-title { position: absolute; left: 76px; top: 16px; width: 236px; color: #ffffff; }
+.settings-list { position: absolute; left: 24px; top: 66px; width: 288px; height: 398px; }
+.font-row { width: 288px; height: 56px; }
+.font-selector { position: absolute; top: 0px; left: 0px; width: 288px; height: 44px; background-color: #17261c; border-radius: 12px; }
+.font-label { position: absolute; left: 12px; top: 0px; width: 80px; color: #ffffff; }
+.font-name { position: absolute; left: 92px; top: 0px; width: 164px; color: #ffffff; text-align: right; }
+.font-chevron { position: absolute; left: 262px; top: 0px; width: 18px; color: #d9e6dd; font-size: 28px; text-align: center; }
+.setting-block { width: 288px; height: 96px; }
+.setting-label { position: absolute; top: 0px; left: 0px; width: 288px; color: #b7c9bd; }
+.stepper { position: absolute; left: 0px; width: 288px; height: 52px; }
+.adjust { position: absolute; top: 0px; width: 44px; height: 52px; background-color: #1a281f; border-radius: 10px; color: #e8f2eb; text-align: center; }
+.decrease { left: 44px; }
+.increase { left: 200px; }
+.setting-value { position: absolute; top: 0px; left: 100px; width: 88px; color: #ffffff; text-align: center; }
+.settings-footer { width: 288px; height: 50px; }
+.save-status { position: absolute; left: 0px; top: 0px; width: 288px; color: #95ad9f; text-align: center; }
+.version { position: absolute; left: 0px; width: 288px; color: #73857a; text-align: center; }
+.reset-row { width: 288px; height: 68px; }
+.reset-defaults { position: absolute; left: 24px; top: 8px; width: 240px; color: #b7c9bd; background-color: #101a14; border-radius: 12px; text-align: center; }
+.font-options { position: absolute; left: 24px; top: 66px; width: 288px; height: 398px; }
+.font-choice-row { width: 288px; height: 98px; }
+.font-choice { position: absolute; left: 0px; top: 0px; width: 288px; height: 86px; border-radius: 12px; }
+.choice-name { position: absolute; left: 12px; top: 6px; width: 204px; color: #b7c9bd; }
+.choice-selected { position: absolute; left: 218px; top: 6px; width: 58px; color: #80f5be; text-align: right; }
+.choice-sample { position: absolute; left: 12px; width: 264px; color: #ffffff; }
 </style>

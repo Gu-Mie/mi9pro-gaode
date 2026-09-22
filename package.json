@@ -1,0 +1,17 @@
+{
+  "name": "mi9pro-gaode-development",
+  "private": true,
+  "license": "MIT",
+  "repository": { "type": "git", "url": "https://github.com/Gu-Mie/mi9pro-gaode.git" },
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "doctor": "node tools/dev-doctor.cjs",
+    "test": "node --test wearable/test/*.test.js tools/test/*.test.cjs",
+    "check:public": "node tools/check-public.cjs",
+    "preview": "node tools/preview-wearable.cjs",
+    "settings": "node tools/preview-settings.cjs",
+    "dev": "node tools/preview-server.cjs",
+    "deps:wearable": "npm --prefix wearable ci",
+    "build:wearable": "npm --prefix wearable run build"
+  }
+}

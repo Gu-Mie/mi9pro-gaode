@@ -18,6 +18,8 @@ function launch(options = {}) {
   const pending = [];
   const screenRequests = [];
   const screenCallbacks = [];
+  const stored = [];
+  let storageRead;
   const connection = {
     getReadyState(callbacks) {
       if (options.stateThrows) throw new Error('state unavailable');
@@ -35,6 +37,16 @@ function launch(options = {}) {
     setTimeout: (callback, delay) => { tick = callback; due = now + delay; return 1; },
     clearTimeout: () => { tick = null; },
     require(name) {
+      if (name === '@system.storage') {
+        if (options.storageMissing) throw new Error('storage unavailable');
+        return { get(callbacks) {
+          storageRead = callbacks;
+          if (!options.storagePending) callbacks.success(options.settings || '');
+        }, set(callbacks) {
+          if (options.storageFails) callbacks.fail('full');
+          else { stored.push(JSON.parse(callbacks.value)); callbacks.success(); }
+        } };
+      }
       if (name === '@system.brightness') {
         if (options.brightnessMissing) throw new Error('brightness unavailable');
         return { setKeepScreenOn(callbacks) {
@@ -58,7 +70,7 @@ function launch(options = {}) {
   const definition = context.module.exports;
   const page = Object.assign({}, definition.private, definition);
   page.onInit();
-  return { page, connection, sent, pending, screenRequests, screenCallbacks, loads: () => loads,
+  return { page, connection, sent, pending, screenRequests, screenCallbacks, stored, storageRead: () => storageRead, loads: () => loads,
     advance(ms) { now += ms; if (tick && now >= due) { const run = tick; tick = null; timerRuns++; run(); } },
     timerRuns: () => timerRuns, running: () => !!tick };
 }
@@ -266,4 +278,86 @@ test('an old brightness callback cannot undo a later request', () => {
   oldRequest.fail('late failure', 201);
   assert.deepEqual(app.screenRequests, [true, false]);
   assert.doesNotMatch(app.page.rawLines.join(''), /late failure/);
+});
+
+test('settings retain incoming navigation and expiry while releasing screen-on', () => {
+  const app = launch({ connected: true });
+  app.page.onReady(); app.page.onShow();
+  app.connection.onmessage({ data: JSON.stringify(navigation(1)) });
+  assert.equal(app.page.guidanceLines.join(''), '前方200米右转');
+  app.page.openSettings();
+  app.page.adjust('fontSize', 6);
+  app.page.adjust('arrowWeight', 1);
+  assert.equal(app.page.fontSize, 36);
+  assert.equal(app.stored.at(-1).arrowWeight, 9);
+  app.connection.onmessage({ data: JSON.stringify({ ...navigation(2), rawText: '直行100米' }) });
+  assert.equal(app.page.settingsOpen, true);
+  assert.equal(app.page.guidanceLines.join(''), '直行100米');
+  assert.deepEqual(app.screenRequests, [true, false]);
+  assert.equal(app.page.onBackPress(), true);
+  assert.deepEqual(app.screenRequests, [true, false, true]);
+  app.page.openSettings();
+  app.advance(20000);
+  app.page.closeSettings();
+  assert.equal(app.page.guidance, false);
+  assert.equal(app.page.status, '导航已过期');
+  assert.deepEqual(app.screenRequests, [true, false, true, false]);
+});
+
+test('restores settings on reopen; missing storage does not abort navigation', () => {
+  const app = launch({ settings: '{"fontSize":42,"arrowSize":90,"arrowWeight":8}' });
+  app.page.onReady();
+  assert.equal(app.page.fontSize, 42);
+  assert.equal(app.page.arrowSize, 90);
+  assert.equal(app.page.versionName, require('../src/manifest.json').versionName);
+  const missing = launch({ connected: true, storageMissing: true });
+  missing.page.onReady(); missing.page.onShow();
+  missing.connection.onmessage({ data: JSON.stringify(navigation(1)) });
+  missing.page.adjust('fontSize', 4);
+  assert.equal(missing.page.fontSize, 34);
+  assert.equal(missing.page.guidance, true);
+  assert.match(missing.page.saveStatus, /无法保存/);
+});
+
+test('storage completion after destroy cannot overwrite a closed page', () => {
+  const app = launch({ storagePending: true });
+  app.page.onReady();
+  const callback = app.storageRead();
+  app.page.onDestroy();
+  callback.success('{"fontSize":44}');
+  assert.equal(app.page.fontSize, 30);
+});
+
+test('font selection, typography and defaults survive storage and every display state', () => {
+  const app = launch({ connected: true, settings: '{"fontSize":30,"arrowSize":78,"arrowWeight":8}' });
+  app.page.onReady(); app.page.onShow();
+  assert.equal(app.page.arrowSize, 78, 'upgrades preserve user adjustments');
+  app.page.openSettings(); app.page.openFonts();
+  app.page.selectFont('kai');
+  assert.equal(app.page.fontFamily, 'BandKai');
+  assert.equal(app.page.fontPickerOpen, false);
+  app.page.adjust('fontSize', 14);
+  assert.equal(app.stored.at(-1).font, 'kai', 'size adjustment must not reset the font');
+  assert.equal(app.page.fontSize, 44);
+  assert.equal(app.page.labelSize, 35);
+  assert.equal(app.page.hintSize, 32);
+  assert.equal(app.page.titleHeight, 62);
+  const restored = launch({ settings: JSON.stringify(app.stored.at(-1)) });
+  restored.page.onReady();
+  assert.equal(restored.page.fontFamily, 'BandKai');
+  assert.equal(restored.page.fontSize, 44);
+  app.page.closeSettings();
+  app.connection.onmessage({ data: JSON.stringify(navigation(1)) });
+  assert.equal(app.page.guidanceFontFamily, 'BandKai');
+  app.connection.onmessage({ data: JSON.stringify({ ...navigation(2), rawText: '直行到𠮷🚦路口' }) });
+  assert.equal(app.page.guidanceFontFamily, 'sans-serif');
+  assert.equal(app.page.guidanceLines.join(''), '直行到𠮷🚦路口');
+  app.page.openSettings(); app.page.openFonts();
+  assert.equal(app.page.onBackPress(), true);
+  assert.equal(app.page.fontPickerOpen, false);
+  assert.equal(app.page.settingsOpen, true);
+  app.page.resetSettings();
+  assert.deepEqual(app.stored.at(-1), { font: 'default', fontSize: 30, arrowSize: 42, arrowWeight: 8 });
+  app.page.onBackPress();
+  assert.equal(app.page.settingsOpen, false);
 });

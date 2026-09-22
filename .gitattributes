@@ -1,0 +1,2 @@
+# Preserve upstream font license text verbatim, including original whitespace.
+wearable/src/common/fonts/*-OFL.txt -whitespace

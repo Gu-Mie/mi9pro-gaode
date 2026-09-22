@@ -21,7 +21,9 @@ android {
         }
     }
     buildTypes {
-        debug { signingConfig signingConfigs.sharedDebug }
+        // Explicit compile-only path for a fresh checkout without the private identity.
+        // Never substitute a generated debug certificate for the paired devices.
+        debug { signingConfig project.hasProperty('unsigned') ? null : signingConfigs.sharedDebug }
         release { minifyEnabled false }
     }
     compileOptions {

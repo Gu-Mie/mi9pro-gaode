@@ -1,10 +1,14 @@
 {
   "name": "wrist-navigation",
-  "version": "0.2.1",
+  "version": "0.2.4",
   "private": true,
+  "license": "MIT",
   "scripts": {
+    "prebuild": "node ../tools/check-signing.cjs",
     "build": "aiot build",
+    "prerelease": "node ../tools/check-signing.cjs --release",
     "release": "aiot release",
+    "prestart": "node ../tools/check-signing.cjs",
     "start": "aiot server --watch",
     "test": "node --test test/*.test.js"
   },

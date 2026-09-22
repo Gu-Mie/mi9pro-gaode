@@ -16,10 +16,15 @@ let apiLoads = 0;
 let available = false;
 const connection = { getReadyState: callbacks => callbacks.success({ status: 1 }), send() {} };
 const screenRequests = [];
+const saved = [];
 const system = {
   setInterval: () => 1, clearInterval() {}, setTimeout: () => 1, clearTimeout() {},
   $app_require$(name) {
     apiLoads++;
+    if (name === '@app-module/system.storage') return {
+      get: callbacks => callbacks.success(''),
+      set: callbacks => { saved.push(JSON.parse(callbacks.value)); callbacks.success(); }
+    };
     if (name === '@app-module/system.brightness') return { setKeepScreenOn({ keepScreenOn }) { screenRequests.push(keepScreenOn); } };
     if (available && name === '@app-module/system.interconnect') return { instance: () => connection };
     throw new Error('mock unavailable firmware API');
@@ -29,7 +34,8 @@ const context = vm.createContext({
   $app_require$: system.$app_require$, console,
   aiot: {
     __ce__(type, binding, children) { return { type, options: binding.__opts__, children: children.flat() }; },
-    __cf__(binding, create) { return binding.__opts__.exp().flatMap((item, index) => create(index, item)); }
+    __cf__(binding, create) { return binding.__opts__.exp().flatMap((item, index) => create(index, item)); },
+    __ci__(binding, create) { return binding.__opts__.shown() ? create() : []; }
   }
 });
 function load(file) {
@@ -76,6 +82,64 @@ function visit(node) {
 }
 visit(tree);
 assert.ok(rows > 0);
+function byClass(node, name) {
+  if ((node.options.classList || []).includes(name)) return node;
+  for (const child of node.children) { const found = byClass(child, name); if (found) return found; }
+  return null;
+}
+function click(name, within) {
+  const node = byClass(within || page.template(page), name);
+  assert.ok(node, 'missing clickable node: ' + name);
+  node.options.events.click({});
+}
+click('settings-entry');
+assert.equal(page.settingsOpen, true);
+assert.equal(byClass(page.template(page), 'home'), null, 'home must be removed, not left behind the settings page');
+const settingsTree = byClass(page.template(page), 'settings');
+assert.ok(settingsTree);
+for (const name of ['settings', 'home']) {
+  assert.equal(styles[name].position, 'absolute');
+  assert.equal(styles[name].top, '0px');
+  assert.equal(styles[name].left, '0px');
+}
+for (let i = 0; i < 6; i++) click('increase', byClass(page.template(page), 'font-size-row'));
+assert.equal(page.fontSize, 36);
+assert.equal(saved.at(-1).fontSize, 36);
+assert.equal(page.versionName, manifest.versionName);
+click('font-selector');
+assert.equal(page.fontPickerOpen, true);
+assert.equal(byClass(page.template(page), 'settings-list'), null);
+const fontChoices = byClass(page.template(page), 'font-options').children;
+for (let i = 1; i <= 3; i++) {
+  if (!page.fontPickerOpen) click('font-selector');
+  click('font-choice', byClass(page.template(page), 'font-options').children[i]);
+  assert.equal(page.font, ['default', 'song', 'kai', 'round'][i]);
+  assert.equal(saved.at(-1).font, page.font);
+  assert.equal(page.fontPickerOpen, false);
+  const family = page.fontFamily;
+  assert.ok(archive.getEntry('common/fonts/' + family + '.ttf'));
+  assert.ok(archive.getEntry('common/fonts/' + family + '-OFL.txt'));
+  assert.ok(styles[family].fontface, 'compiled font-face definition: ' + family);
+  assert.ok(archive.readFile('common/fonts/' + family + '.ttf').equals(
+    fs.readFileSync(path.join(project, 'wearable/src/common/fonts', family + '.ttf'))));
+}
+click('reset-defaults');
+assert.equal(page.font, 'default');
+assert.equal(page.fontSize, 30);
+assert.equal(page.arrowSize, 42);
+assert.equal(page.arrowWeight, 8);
+click('back');
+assert.equal(byClass(page.template(page), 'settings'), null);
+assert.ok(byClass(page.template(page), 'navigation-stage'));
+assert.equal(byClass(page.template(page), 'rest'), null);
+assert.equal(page.guidanceLines.join(''), '右转进入示例路');
+assert.ok(archive.getEntry('common/settings.png'));
+for (let i = 0; i < 3; i++) { click('settings-entry'); click('back'); }
+for (let weight = 4; weight <= 10; weight++) {
+  for (const maneuver of ['left', 'right', 'straight', 'slight_left', 'slight_right', 'sharp_left', 'sharp_right', 'uturn', 'roundabout', 'arrive', 'unknown']) {
+    assert.ok(archive.getEntry('common/arrows/' + weight + '/' + maneuver + '.png'));
+  }
+}
 page.onDestroy();
-assert.deepEqual(screenRequests, [true, false]);
-console.log('RPK ' + manifest.versionName + ': app/page entry, API failure fallback, navigation rendering, screen-on lifecycle, list dimensions and image assets passed.');
+assert.deepEqual(screenRequests, [true, false, true, false, true, false, true, false, true, false]);
+console.log('RPK ' + manifest.versionName + ': startup, compiled click handlers, font choices/resources, exclusive page trees, settings persistence/reset, navigation, screen lifecycle and assets passed.');

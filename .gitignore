@@ -22,3 +22,13 @@ android/app/libs/*.aar
 *.keystore
 *.pem
 *.key
+*.apk
+*.rpk
+*.aar
+*.hprof
+__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db
+*.zip
+*.7z
