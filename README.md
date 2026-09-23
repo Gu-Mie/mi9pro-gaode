@@ -1,8 +1,7 @@
 # 腕上导航 · 小米手环 9 Pro
+本项目仅供学习、研究与技术交流。如有问题，请联系邮箱 2858005527@qq.com
 
 把 Android 高德地图的导航通知同步到小米手环 9 Pro，在手腕上查看转向和完整指引。
-
-> 本项目仅供学习、研究与技术交流。此说明表达项目定位，不额外限制 [MIT 许可证](LICENSE) 授予的权利；第三方组件遵循各自许可。
 
 个人开发的实验性项目，与高德、小米或 AstroBox 无隶属关系。当前配套版本：**手机 0.2.1 / 手环 0.2.4**，首次公开作为测试版提供。
 
@@ -66,5 +65,3 @@ licenses/      第三方许可文本
 ## 反馈与许可
 
 欢迎提交 [Issue](https://github.com/Gu-Mie/mi9pro-gaode/issues) 或小范围 PR，先阅读 [贡献指南](CONTRIBUTING.md)。联系邮箱：[2858005527@qq.com](mailto:2858005527@qq.com)。安全问题请按 [安全说明](SECURITY.md) 私下反馈。
-
-原创代码与文档采用 [MIT](LICENSE)。字体适用 SIL OFL 1.1，Gradle Wrapper 保留 Apache-2.0，小米 XMS SDK 不属于本项目 MIT 授权范围，详见 [第三方声明](THIRD_PARTY_NOTICES.md)。
