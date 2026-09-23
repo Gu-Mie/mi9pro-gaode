@@ -5,7 +5,7 @@
 
 个人开发的实验性项目，与高德、小米或 AstroBox 无隶属关系。当前配套版本：**手机 0.2.1 / 手环 0.2.4**，首次公开作为测试版提供。
 
-[下载安装包](https://github.com/Gu-Mie/mi9pro-gaode/releases) · [首次使用](docs/getting-started.md) · [开发指南](docs/development.md) · [更新记录](CHANGELOG.md) · [隐私说明](PRIVACY.md)
+[下载安装包](https://github.com/Gu-Mie/wrist-navigation/releases) · [首次使用](docs/getting-started.md) · [开发指南](docs/development.md) · [更新记录](CHANGELOG.md) · [隐私说明](PRIVACY.md)
 
 ![手环导航、等待与设置页面的浏览器源码预览](docs/images/wearable-native-024.png)
 
@@ -21,7 +21,7 @@
 
 ## 下载与安装
 
-从 [GitHub Releases](https://github.com/Gu-Mie/mi9pro-gaode/releases) 获取同一次发布的配套文件：
+从 [GitHub Releases](https://github.com/Gu-Mie/wrist-navigation/releases) 获取同一次发布的配套文件：
 
 | 文件 | 用途 |
 | --- | --- |
@@ -64,4 +64,4 @@ licenses/      第三方许可文本
 
 ## 反馈与许可
 
-欢迎提交 [Issue](https://github.com/Gu-Mie/mi9pro-gaode/issues) 或小范围 PR，先阅读 [贡献指南](CONTRIBUTING.md)。联系邮箱：[2858005527@qq.com](mailto:2858005527@qq.com)。安全问题请按 [安全说明](SECURITY.md) 私下反馈。
+欢迎提交 [Issue](https://github.com/Gu-Mie/wrist-navigation/issues) 或小范围 PR，先阅读 [贡献指南](CONTRIBUTING.md)。联系邮箱：[2858005527@qq.com](mailto:2858005527@qq.com)。安全问题请按 [安全说明](SECURITY.md) 私下反馈。

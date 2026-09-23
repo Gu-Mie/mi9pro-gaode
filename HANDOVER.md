@@ -15,9 +15,13 @@
 
 公开目录保留双端源码、测试、开发工具、当前截图与必要文档；旧设计图、提示词、米坛草稿和冗长开发记录归档在被忽略的 `.local/archive/github-prep-2026-09-23/`。历史安装包与旧源码 ZIP 在 `outputs/archive/2026-09-23/`。公开 Git 历史未改写，归档不表示旧提交中的已跟踪文档被抹除。
 
-GitHub 仓库现已公开；[v0.2.4 测试版](https://github.com/Gu-Mie/mi9pro-gaode/releases/tag/v0.2.4) 已发布，标签对应提交 `0f89a92`。该提交的 Windows/Ubuntu × Node.js 22/24 四组 CI 全部通过；四个附件已在未登录状态下载并核对哈希，GitHub 自动源码归档为 188 个文件，不含签名、SDK AAR、安装包或本地资料。
+GitHub 仓库现已公开；[v0.2.4 测试版](https://github.com/Gu-Mie/wrist-navigation/releases/tag/v0.2.4) 已发布，标签对应提交 `0f89a92`。该提交的 Windows/Ubuntu × Node.js 22/24 四组 CI 全部通过；四个附件已在未登录状态下载并核对哈希，GitHub 自动源码归档为 188 个文件，不含签名、SDK AAR、安装包或本地资料。
 
 发布附件位于 `outputs/releases/v0.2.4/`；当前预览输出到 `outputs/previews/`。用户随后要求按米坛发布表单截图准备填写文档，已生成 `outputs/publication/bandbbs-v0.2.4/米坛发布填写指南-v0.2.4.md`、纯文本正文、192×192 图标和源码预览图，使用实际 GitHub 下载链接；未向米坛提交资源。
+
+## 仓库更名（2026-09-23）
+
+仓库已改名为 `Gu-Mie/wrist-navigation`，Git origin、当前文档、Release 说明及本地米坛填写材料已同步使用新地址。保留 v0.2.4 标签、Release 和四个附件；安装包的包名、签名及校验值不变。本地工作目录仍以当前检出路径为准。已同步保留用户在 GitHub 对 README 的最新修改。
 
 ## 后续工作
 

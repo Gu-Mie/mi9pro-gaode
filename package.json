@@ -1,8 +1,8 @@
 {
-  "name": "mi9pro-gaode-development",
+  "name": "wrist-navigation-development",
   "private": true,
   "license": "MIT",
-  "repository": { "type": "git", "url": "https://github.com/Gu-Mie/mi9pro-gaode.git" },
+  "repository": { "type": "git", "url": "https://github.com/Gu-Mie/wrist-navigation.git" },
   "engines": { "node": ">=22" },
   "scripts": {
     "doctor": "node tools/dev-doctor.cjs",

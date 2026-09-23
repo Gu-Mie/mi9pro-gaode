@@ -1,6 +1,6 @@
 # 手环安装与更新
 
-首次使用需同时配置手机端，见 [首次使用](getting-started.md)。当前配套文件为手机 `NAV-PHONE-021.apk` 和手环 `NAV-BAND-024.rpk`，从 [GitHub Releases](https://github.com/Gu-Mie/mi9pro-gaode/releases) 获取。
+首次使用需同时配置手机端，见 [首次使用](getting-started.md)。当前配套文件为手机 `NAV-PHONE-021.apk` 和手环 `NAV-BAND-024.rpk`，从 [GitHub Releases](https://github.com/Gu-Mie/wrist-navigation/releases) 获取。
 
 ## 安装步骤
 
